@@ -176,6 +176,12 @@ class AtomsTrainer:
                     keys_ignored="dur",
                 )
             )
+
+        # Custom callbacks (e.g. optuna)
+        custom_callback = self.config["cmd"].get("custom_callback")
+        if custom_callback is not None:
+            callbacks.append(custom_callback)
+
         self.callbacks = callbacks
 
     def load_criterion(self):
