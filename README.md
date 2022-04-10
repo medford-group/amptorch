@@ -69,6 +69,9 @@ configs = {
       "logger": False,              # Log results to Weights and Biases (https://www.wandb.com/)
                                     ## wandb offers a very clean and flexible interface to monitor results online
                                     ## A free account is necessary to view and log results
+      "custom_callback": object,    # Extra Skorch callback (optional). Can be used e.g. to add the optuna
+                                    ## Skorch callback, in order to implement pruning (early stopping) while 
+                                    ## performing optuna hyperparameter tuning.
   },
 }
 ```
