@@ -29,7 +29,6 @@ ffibuilder.set_source(
     ],
     source_extension=".cpp",
     include_dirs=["amptorch/descriptor/GMPOrderNorm/"],
-    extra_compile_args=["-no-multibyte-chars"],
 )
 
 if __name__ == "__main__":

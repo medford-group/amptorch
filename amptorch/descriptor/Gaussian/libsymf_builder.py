@@ -31,7 +31,6 @@ ffibuilder.set_source(
     ],
     source_extension=".cpp",
     include_dirs=["amptorch/descriptor/Gaussian/"],
-    extra_compile_args=["-no-multibyte-chars"],
 )
 
 if __name__ == "__main__":
