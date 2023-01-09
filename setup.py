@@ -17,7 +17,6 @@ setup(
     python_requires=">=3.6, <4",
     setup_requires=setup_requires,
     cffi_modules=[
-        "amptorch/descriptor/Gaussian/libsymf_builder.py:ffibuilder",
         "amptorch/descriptor/GMP/libgmp_builder.py:ffibuilder",
         "amptorch/descriptor/GMPOrderNorm/libgmpordernorm_builder.py:ffibuilder",
     ],
