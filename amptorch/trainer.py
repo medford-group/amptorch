@@ -124,7 +124,7 @@ class AtomsTrainer:
             )
 
             self.forcetraining = self.config["model"].get("get_forces", True)
-            self.fp_scheme = self.config["dataset"].get("fp_scheme", "gaussian").lower()
+            self.fp_scheme = self.config["dataset"].get("fp_scheme", "gmpordernorm").lower()
             self.fp_params = self.config["dataset"]["fp_params"]
             self.save_fps = self.config["dataset"].get("save_fps", True)
             self.cutoff_params = self.config["dataset"].get(
@@ -295,10 +295,10 @@ class AtomsTrainer:
                 verbose=self.config["cmd"].get("verbose", True),
                 **self.optimizer,
             )
-        # turn off pin memory for gaussian symmetry function force training, as torch.geometric outputs error
+        # turn off pin memory for GMPOrderNorm function force training, as torch.geometric outputs error
         elif self.config["dataset"].get(
-            "fp_scheme", "gaussian"
-        ).lower() == "gaussian" and self.config["model"].get("get_forces", True):
+            "fp_scheme", "gmpordernorm"
+        ).lower() == "gmpordernorm" and self.config["model"].get("get_forces", True):
             self.net = NeuralNetRegressor(
                 module=self.model,
                 criterion=self.criterion,

@@ -55,7 +55,7 @@ configs = {
 				    ## LMDB construction can be found in examples/construct_lmdb.py
       "val_split": float,           # Proportion of training set to use for validation
       "elements": list,             # List of unique elements in dataset, optional (default: computes unique elements)
-      "fp_scheme": str,             # Fingerprinting scheme to feature dataset, "gaussian" or "gmp" (default: "gaussian")
+      "fp_scheme": str,             # Fingerprinting scheme to feature dataset, "gmpordernorm" or "gmp" (default: "gmpordernorm")
       "fp_params": dict,            # Fingerprint parameters, see examples for correct layout
       "cutoff_params": dict,        # Cutoff function - polynomial or cosine,
                                     ## Polynomial - {"cutoff_func": "Polynomial", "gamma": 2.0}
@@ -124,8 +124,7 @@ If you want to contribute to this project, please use the [fork and pull](https:
 - This project is being developed at Carnegie Mellon University in the Department of Chemical Engineering, by Muhammed Shuaibi and Zachary Ulissi, in collaboration with Andrew Peterson, Franklin Goldsmith, Brenda Rubenstein, Andrew Medford, and Adam Willard as part of the Department of Energy's *Bridging the time scale in exascale computing of chemical systems* project. AmpTorch developers include Xiangyun Lei, Ben Comer, Rui Qi Chen, Eric Musa, and Matt Adams.
 - Funded by the Department of Energy's Basic Enenergy Science, Computational Chemical Sciences Program Office. Award # DE-SC0019441
 - Engineering ideas have been heavily borrowed from our work on the [Open Catalyst Project](https://github.com/Open-Catalyst-Project/baselines)
-- Gaussian fingerprints have been adapted from [SIMPLE-NN](https://github.com/MDIL-SNU/SIMPLE-NN)
 
 
 ### License
-This sofware is licensed under the GNU General Public License. See LICENSE.
+This particular branch of the sofware is licensed under the MIT License. See LICENSE.
