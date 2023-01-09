@@ -1,7 +1,11 @@
 [![ulissigroup](https://circleci.com/gh/ulissigroup/amptorch.svg?style=svg)](https://app.circleci.com/pipelines/github/ulissigroup/amptorch)
-## *AMPtorch*: Atomistic Machine-learning Package - PyTorch
+## *AmpTorch*: Atomistic Machine-learning Package - PyTorch
 
-*AMPtorch* is a PyTorch implementation of the [Atomistic Machine-learning Package](https://amp.readthedocs.io/en/latest/) (AMP) code that seeks to provide users with improved performance and flexibility as compared to the original code. The implementation does so by benefiting from state-of-the-art machine learning methods and techniques to be optimized in conjunction with high-throughput supercomputers. *AMPtorch* is built on top of [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/) and [Skorch](https://skorch.readthedocs.io/en/stable/).
+*AmpTorch* is a PyTorch implementation of the [Atomistic Machine-learning Package](https://amp.readthedocs.io/en/latest/) (AMP) code that seeks to provide users with improved performance and flexibility as compared to the original code. The implementation does so by benefiting from state-of-the-art machine learning methods and techniques to be optimized in conjunction with high-throughput supercomputers. *AmpTorch* is built on top of [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/) and [Skorch](https://skorch.readthedocs.io/en/stable/).
+
+### Documentation
+
+Go to [AmpTorch Documentation](https://amptorch.readthedocs.io/en/latest/) for installation, usage and example lookup.
 
 ### Installation
 
@@ -65,7 +69,7 @@ configs = {
   },
   "cmd": {
       "debug": bool,                # Debug mode, does not write/save checkpoints/results (default: False)
-      "dtype": object,              # Pytorch level of precision (default: torch.FloatTensor)
+      "dtype": object,              # Pytorch level of precision (default: torch.DoubleTensor)
       "run_dir": str,               # Path to run trainer, where logs are to be saved (default: "./")
       "seed": int,                  # Random seed (default: 0)
       "identifier": str,            # Unique identifer to experiment, optional
@@ -98,19 +102,30 @@ predictions = trainer.predict(list_of_atoms_objects)
 energies = predictions["energy"]
 forces = predictions["forces"]
 ```
-#### Construct AMPtorch-ASE calculator
+#### Construct AmpTorch-ASE calculator
 To interface with ASE, an ASE calculator may be constructed as follows:
 ```
-from amptorch import AMPtorch
+from amptorch import AmpTorch
 
-calc = AMPtorch(trainer)
+calc = AmpTorch(trainer)
 slab.set_calculator(calc)
 energy = slab.get_potential_energy()
 forces = slab.get_forces()
 ```
 
+### Development notes
+#### Reporting issues
+Regarding bugs, issues or suggested feature improvements related to the software, please use the [issue tracker](https://github.com/ulissigroup/amptorch/issues) of the GitHub project.
+
+#### Contributing
+If you want to contribute to this project, please use the [fork and pull](https://github.com/ulissigroup/amptorch/pulls) following the [guidelines](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) and pertaining to the overall objective of this project as described above.
+
 ### Acknowledgements
-- This project is being developed at Carnegie Mellon University in the Department of Chemical Engineering, by Muhammed Shuaibi and Zachary Ulissi, in collaboration with Andrew Peterson, Franklin Goldsmith, Brenda Rubenstein, Andrew Medford, and Adam Willard as part of the Department of Energy's *Bridging the time scale in exascale computing of chemical systems* project. AMPtorch developers include Xiangyun Lei, Ben Comer, Rui Qi Chen, Eric Musa, and Matt Adams.
+- This project is being developed at Carnegie Mellon University in the Department of Chemical Engineering, by Muhammed Shuaibi and Zachary Ulissi, in collaboration with Andrew Peterson, Franklin Goldsmith, Brenda Rubenstein, Andrew Medford, and Adam Willard as part of the Department of Energy's *Bridging the time scale in exascale computing of chemical systems* project. AmpTorch developers include Xiangyun Lei, Ben Comer, Rui Qi Chen, Eric Musa, and Matt Adams.
 - Funded by the Department of Energy's Basic Enenergy Science, Computational Chemical Sciences Program Office. Award # DE-SC0019441
 - Engineering ideas have been heavily borrowed from our work on the [Open Catalyst Project](https://github.com/Open-Catalyst-Project/baselines)
 - Gaussian fingerprints have been adapted from [SIMPLE-NN](https://github.com/MDIL-SNU/SIMPLE-NN)
+
+
+### License
+This sofware is licensed under the GNU General Public License. See LICENSE.

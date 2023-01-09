@@ -13,6 +13,7 @@ dependencies:
   - tqdm=4.45.*
   - h5py
   - cpuonly
+  - pykdtree
   - pip:
     - cffi
     - wandb
@@ -20,8 +21,11 @@ dependencies:
     - skorch==0.10.*
     - torch-geometric
     - -f https://data.pyg.org/whl/torch-1.9.0+cpu.html
-    - torch-cluster
     - torch-scatter
     - -f https://data.pyg.org/whl/torch-1.9.0+cpu.html
     - torch-sparse
+    - -f https://data.pyg.org/whl/torch-1.9.0+cpu.html
+    - torch-cluster
+    - -f https://data.pyg.org/whl/torch-1.9.0+cpu.html
     - torch-spline-conv
+    - -f https://data.pyg.org/whl/torch-1.9.0+cpu.html

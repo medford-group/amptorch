@@ -9,6 +9,7 @@ from amptorch.preprocessing import (
     PCAReducer,
     FeatureScaler,
     TargetScaler,
+    AtomicCorrectionScaler,
     sparse_block_diag,
 )
 
@@ -23,7 +24,6 @@ class AtomsDataset(Dataset):
         # pca_setting={"num_pc": 20, "elementwise": False, "normalize": False},
         save_fps=True,
         scaling={"type": "normalize", "range": (0, 1), "threshold": 1e-6},
-        auto_center_atoms=False,
         cores=1,
         process=True,
     ):
@@ -40,7 +40,6 @@ class AtomsDataset(Dataset):
             r_forces=self.forcetraining,
             save_fps=save_fps,
             fprimes=forcetraining,
-            auto_center_atoms=auto_center_atoms,
             cores=cores,
         )
 
@@ -56,8 +55,13 @@ class AtomsDataset(Dataset):
         #     self.pca_reducer.reduce(data_list)
 
         self.feature_scaler = FeatureScaler(data_list, self.forcetraining, self.scaling)
+        # scaling by atomic energy correction
+        # self.atomic_correction_scaler = AtomicCorrectionScaler(data_list)
+        self.atomic_correction_scaler = None
         self.target_scaler = TargetScaler(data_list, self.forcetraining)
         self.feature_scaler.norm(data_list)
+        if self.atomic_correction_scaler is not None:
+            self.atomic_correction_scaler.norm(data_list)
         self.target_scaler.norm(data_list)
 
         return data_list
@@ -96,7 +100,9 @@ class DataCollater:
             if self.forcetraining:
                 return batch, [batch.energy, batch.forces]
             else:
-                return batch, [batch.energy,]
+                return batch, [
+                    batch.energy,
+                ]
         else:
             return batch
 

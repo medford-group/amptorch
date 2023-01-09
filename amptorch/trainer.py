@@ -34,7 +34,7 @@ from amptorch.utils import (
     InOrderSplit,
 )
 from amptorch.data_parallel import DataParallel, ParallelCollater
-from amptorch.ase_utils import AMPtorch
+from amptorch.ase_utils import AmpTorch
 
 try:
     shell = get_ipython().__class__.__name__
@@ -64,7 +64,7 @@ class AtomsTrainer:
         self.load_skorch()
 
     def load_config(self):
-        dtype = self.config["cmd"].get("dtype", torch.FloatTensor)
+        dtype = self.config["cmd"].get("dtype", torch.DoubleTensor)
         torch.set_default_tensor_type(dtype)
         self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         self.identifier = self.config["cmd"].get("identifier", False)
@@ -141,9 +141,6 @@ class AtomsTrainer:
                 descriptor_setup=descriptor_setup,
                 forcetraining=self.forcetraining,
                 save_fps=self.config["dataset"].get("save_fps", True),
-                auto_center_atoms=self.config["dataset"].get(
-                    "auto_center_atoms", False
-                ),
                 scaling=self.config["dataset"].get(
                     "scaling",
                     {"type": "normalize", "range": (0, 1), "elementwise": True},
@@ -151,6 +148,8 @@ class AtomsTrainer:
             )
         self.feature_scaler = self.train_dataset.feature_scaler
         self.target_scaler = self.train_dataset.target_scaler
+        self.atomic_correction_scaler = None
+        # self.atomic_correction_scaler = self.train_dataset.atomic_correction_scaler
         self.input_dim = self.train_dataset.input_dim
         self.val_split = self.config["dataset"].get("val_split", 0)
         if not self.debug:
@@ -183,7 +182,9 @@ class AtomsTrainer:
         self.parallel_collater = ParallelCollater(self.gpus, collate_fn)
         if self.gpus > 0:
             self.model = DataParallel(
-                self.model, output_device=self.output_device, num_gpus=self.gpus,
+                self.model,
+                output_device=self.output_device,
+                num_gpus=self.gpus,
             )
 
     def load_extras(self):
@@ -217,14 +218,31 @@ class AtomsTrainer:
             from skorch.callbacks import WandbLogger
 
             callbacks.append(
-                WandbLogger(self.wandb_run, save_model=False, keys_ignored="dur",)
+                WandbLogger(
+                    self.wandb_run,
+                    save_model=False,
+                    keys_ignored="dur",
+                )
             )
 
+        # early stopping
+        if self.config["cmd"].get("early_stopping", False):
+            from skorch.callbacks import EarlyStopping
+
+            callbacks.append(
+                EarlyStopping(
+                    patience=self.config["cmd"].get("early_stoppping_patience", 5)
+                )
+            )
+
+<<<<<<< HEAD
         # Custom callbacks (e.g. optuna)
         custom_callback = self.config["cmd"].get("custom_callback")
         if custom_callback is not None:
             callbacks.append(custom_callback)
 
+=======
+>>>>>>> c1cbe3603f0f29ff1f3d1c094990f243a126dce5
         self.callbacks = callbacks
 
     def load_criterion(self):
@@ -242,61 +260,67 @@ class AtomsTrainer:
         if self.config["cmd"].get("logger", False):
             import wandb
 
-            self.wandb_run = wandb.init(name=self.identifier, config=self.config,)
+            self.wandb_run = wandb.init(
+                name=self.identifier,
+                config=self.config,
+            )
 
     def load_skorch(self):
         skorch.net.to_tensor = to_tensor
 
         if self.config["dataset"].get("cache", None) == "partial":
-            try:
-                self.net = NeuralNetRegressor(
-                    module=self.model,
-                    criterion=self.criterion,
-                    criterion__force_coefficient=self.config["optim"].get(
-                        "force_coefficient", 0
-                    ),
-                    criterion__loss=self.config["optim"].get("loss", "mse"),
-                    lr=self.config["optim"].get("lr", 1e-1),
-                    batch_size=self.config["optim"].get("batch_size", 32),
-                    max_epochs=self.config["optim"].get("epochs", 100),
-                    iterator_train__collate_fn=self.parallel_collater,
-                    iterator_train__sampler=PartialCacheSampler(
-                        self.train_dataset.get_length_list(), self.val_split,
-                    ),
-                    iterator_train__shuffle=False,
-                    iterator_train__pin_memory=True,
-                    iterator_valid__collate_fn=self.parallel_collater,
-                    iterator_valid__shuffle=False,
-                    iterator_valid__pin_memory=True,
-                    device=self.device,
-                    train_split=self.split,
-                    callbacks=self.callbacks,
-                    verbose=self.config["cmd"].get("verbose", True),
-                    **self.optimizer,
-                )
-            except:
-                self.net = NeuralNetRegressor(
-                    module=self.model,
-                    criterion=self.criterion,
-                    criterion__force_coefficient=self.config["optim"].get(
-                        "force_coefficient", 0
-                    ),
-                    criterion__loss=self.config["optim"].get("loss", "mse"),
-                    lr=self.config["optim"].get("lr", 1e-1),
-                    batch_size=self.config["optim"].get("batch_size", 32),
-                    max_epochs=self.config["optim"].get("epochs", 100),
-                    iterator_train__collate_fn=self.parallel_collater,
-                    iterator_train__shuffle=True,
-                    iterator_train__pin_memory=True,
-                    iterator_valid__collate_fn=self.parallel_collater,
-                    iterator_valid__shuffle=False,
-                    iterator_valid__pin_memory=True,
-                    device=self.device,
-                    train_split=self.split,
-                    callbacks=self.callbacks,
-                    verbose=self.config["cmd"].get("verbose", True),
-                    **self.optimizer,
-                )
+            self.net = NeuralNetRegressor(
+                module=self.model,
+                criterion=self.criterion,
+                criterion__force_coefficient=self.config["optim"].get(
+                    "force_coefficient", 0
+                ),
+                criterion__loss=self.config["optim"].get("loss", "mse"),
+                lr=self.config["optim"].get("lr", 1e-1),
+                batch_size=self.config["optim"].get("batch_size", 32),
+                max_epochs=self.config["optim"].get("epochs", 100),
+                iterator_train__collate_fn=self.parallel_collater,
+                iterator_train__sampler=PartialCacheSampler(
+                    self.train_dataset.get_length_list(),
+                    self.val_split,
+                ),
+                iterator_train__shuffle=False,
+                iterator_train__pin_memory=True,
+                iterator_valid__collate_fn=self.parallel_collater,
+                iterator_valid__shuffle=False,
+                iterator_valid__pin_memory=True,
+                device=self.device,
+                train_split=self.split,
+                callbacks=self.callbacks,
+                verbose=self.config["cmd"].get("verbose", True),
+                **self.optimizer,
+            )
+        # turn off pin memory for gaussian symmetry function force training, as torch.geometric outputs error
+        elif self.config["dataset"].get(
+            "fp_scheme", "gaussian"
+        ).lower() == "gaussian" and self.config["model"].get("get_forces", True):
+            self.net = NeuralNetRegressor(
+                module=self.model,
+                criterion=self.criterion,
+                criterion__force_coefficient=self.config["optim"].get(
+                    "force_coefficient", 0
+                ),
+                criterion__loss=self.config["optim"].get("loss", "mse"),
+                lr=self.config["optim"].get("lr", 1e-1),
+                batch_size=self.config["optim"].get("batch_size", 32),
+                max_epochs=self.config["optim"].get("epochs", 100),
+                iterator_train__collate_fn=self.parallel_collater,
+                iterator_train__shuffle=True,
+                iterator_train__pin_memory=False,
+                iterator_valid__collate_fn=self.parallel_collater,
+                iterator_valid__shuffle=False,
+                iterator_valid__pin_memory=False,
+                device=self.device,
+                train_split=self.split,
+                callbacks=self.callbacks,
+                verbose=self.config["cmd"].get("verbose", True),
+                **self.optimizer,
+            )
         else:
             self.net = NeuralNetRegressor(
                 module=self.model,
@@ -333,31 +357,65 @@ class AtomsTrainer:
         elapsed_time = time.time() - stime
         print(f"Training completed in {elapsed_time}s")
 
-    def predict(self, images, disable_tqdm=True):
+    def predict(
+        self,
+        images,
+        disable_tqdm=True,
+        get_latent=None,
+        get_descriptor=False,
+        save_fps=False,
+    ):
         if len(images) < 1:
             warnings.warn("No images found!", stacklevel=2)
             return images
 
         self.descriptor = construct_descriptor(self.config["dataset"]["descriptor"])
 
+        t0 = time.time()
         a2d = AtomsToData(
             descriptor=self.descriptor,
             r_energy=False,
             r_forces=False,
-            save_fps=self.config["dataset"].get("save_fps", True),
+            save_fps=save_fps,
             fprimes=self.forcetraining,
-            auto_center_atoms=self.config["dataset"].get("auto_center_atoms", False),
             cores=1,
         )
 
         data_list = a2d.convert_all(images, disable_tqdm=disable_tqdm)
 
         self.feature_scaler.norm(data_list, disable_tqdm=disable_tqdm)
+        t_fingerPrint = time.time() - t0
 
         self.net.module.eval()
         collate_fn = DataCollater(train=False, forcetraining=self.forcetraining)
 
         predictions = {"energy": [], "forces": []}
+
+        t_forwardPass = 0
+
+        # get the latent layer
+        if get_latent is not None:
+            predictions["latent"] = []
+
+            def hook2get_latent(self, input, output):
+                _latent = output.detach().numpy()
+                _latent_mean = np.mean(_latent, axis=0)
+                predictions["latent"].append(_latent_mean)
+
+            latent_layer = get_latent
+
+            self.net.module.model.model_net[latent_layer].register_forward_hook(
+                hook2get_latent
+            )
+
+        # get feature descriptor for every image in the trajectory by averaging over atoms.
+        if get_descriptor:
+            predictions["descriptors"] = []
+            for data in data_list:
+                _feature = data.fingerprint.cpu().detach().numpy()
+                _feature_mean = np.mean(_feature, axis=0)
+                predictions["descriptors"].append(_feature_mean)
+
         # for data in data_list:
         for idx, data in tqdm(
             enumerate(data_list),
@@ -367,17 +425,25 @@ class AtomsTrainer:
             disable=disable_tqdm,
         ):
             collated = collate_fn([data]).to(self.device)
-            energy, forces = self.net.module([collated])
 
+            t0 = time.time()
+            energy, forces = self.net.module([collated])
             energy = self.target_scaler.denorm(
                 energy.detach().cpu(), pred="energy"
             ).tolist()
+            # if self.atomic_correction_scaler is not None:
+            #     energy = self.atomic_correction_scaler.denorm(energy, data_list[idx])
             forces = self.target_scaler.denorm(
                 forces.detach().cpu(), pred="forces"
             ).numpy()
+            t_forwardPass += time.time() - t0
 
             predictions["energy"].extend(energy)
             predictions["forces"].append(forces)
+
+        # time fingerprinting and neural network passing
+        predictions["t_fingerPrint"] = t_fingerPrint
+        predictions["t_forwardPass"] = t_forwardPass
 
         return predictions
 
@@ -437,4 +503,4 @@ class AtomsTrainer:
             print("Unable to load checkpoint!")
 
     def get_calc(self):
-        return AMPtorch(self)
+        return AmpTorch(self)

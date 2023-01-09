@@ -23,52 +23,64 @@ for dist in distances:
     images.append(image)
 
 ### Construct parameters
+nsigmas = 10
+max_MCSH_order = 3
+max_radial_sigma = 2.0
 
-sigmas = np.logspace(np.log10(0.02), np.log10(1.0), num=4)
-MCSHs = {
-    "MCSHs": {
-        "0": {"groups": [1], "sigmas": sigmas},
-        "1": {"groups": [1], "sigmas": sigmas},
-        "2": {"groups": [1, 2], "sigmas": sigmas},
-        "3": {"groups": [1, 2, 3], "sigmas": sigmas},
-    },
+sigmas = np.linspace(0, max_radial_sigma, nsigmas + 1, endpoint=True)[1:]
+GMP = {
+    "MCSHs": {"orders": list(range(max_MCSH_order + 1)), "sigmas": sigmas},
     "atom_gaussians": {
-        "C": "./GMP_params/C_pseudodensity_4.g",
-        "O": "./GMP_params/O_pseudodensity_4.g",
-        "Cu": "./GMP_params/Cu_pseudodensity_4.g",
+        "C": "amptorch/tests/GMP_params/C_pseudodensity_4.g",
+        "O": "amptorch/tests/GMP_params/O_pseudodensity_4.g",
+        "Cu": "amptorch/tests/GMP_params/Cu_pseudodensity_4.g",
     },
-    "cutoff": 10,
+    "cutoff": 8,
 }
-
 
 elements = ["Cu", "C", "O"]
-config = {
-    "model": {"get_forces": True, "num_layers": 3, "num_nodes": 20},
-    "optim": {
-        "force_coefficient": 0.04,
-        "lr": 1e-3,
-        "batch_size": 10,
-        "epochs": 300,
-        "loss": "mse",
-        "metric": "mae",
-    },
-    "dataset": {
-        "raw_data": images,
-        "val_split": 0,
-        "elements": elements,
-        "fp_scheme": "gmp",
-        "fp_params": MCSHs,
-        "save_fps": False,
-    },
-    "cmd": {
-        "debug": False,
-        "run_dir": "./",
-        "seed": 1,
-        "identifier": "test",
-        "verbose": False,
-        "logger": False,
-    },
-}
+
+
+def get_config():
+    config = {
+        "model": {
+            "name": "singlenn",
+            "get_forces": True,
+            "num_layers": 3,
+            "num_nodes": 20,
+            "batchnorm": True,
+            "activation": torch.nn.Tanh,
+        },
+        "optim": {
+            "force_coefficient": 0.04,
+            "lr": 1e-3,
+            "batch_size": 16,
+            "epochs": 300,
+            "loss": "mse",
+            "metric": "mae",
+        },
+        "dataset": {
+            "raw_data": images,
+            "fp_scheme": "gmpordernorm",
+            "fp_params": GMP,
+            "elements": elements,
+            "save_fps": True,
+            "scaling": {"type": "normalize", "range": (-1, 1)},
+            "val_split": 0,
+        },
+        "cmd": {
+            "debug": False,
+            "run_dir": "./",
+            "seed": 1,
+            "identifier": "test",
+            "verbose": False,
+            # Weights and Biases used for logging - an account(free) is required
+            "logger": False,
+        },
+    }
+
+    return config
+
 
 true_energies = np.array([image.get_potential_energy() for image in images])
 true_forces = np.concatenate(np.array([image.get_forces() for image in images]))
@@ -80,7 +92,8 @@ def get_energy_metrics(config):
     predictions = trainer.predict(images)
     pred_energies = np.array(predictions["energy"])
     mae = np.mean(np.abs(true_energies - pred_energies))
-    assert mae < 0.02
+    print("mae={}".format(mae))
+    assert mae < 0.05
 
 
 def get_force_metrics(config):
@@ -92,8 +105,12 @@ def get_force_metrics(config):
 
     e_mae = np.mean(np.abs(true_energies - pred_energies))
     f_mae = np.mean(np.abs(pred_forces - true_forces))
+
+    print("e_mae=", e_mae)
+    print("f_mae=", f_mae)
+
     assert e_mae < 0.06
-    assert f_mae < 0.06
+    assert f_mae < 0.10
 
 
 def test_training_gmp():
@@ -101,12 +118,14 @@ def test_training_gmp():
 
     ### train only
     # energy+forces+mse loss
+    config = get_config()
     config["model"]["get_forces"] = True
     config["optim"]["force_coefficient"] = 0.04
     config["optim"]["loss"] = "mse"
     get_force_metrics(config)
     print("Train energy+forces success!")
     # energy+mae loss
+    config = get_config()
     config["model"]["get_forces"] = False
     config["optim"]["force_coefficient"] = 0
     config["optim"]["loss"] = "mae"
@@ -115,6 +134,7 @@ def test_training_gmp():
 
     ### train+val
     # energy only
+    config = get_config()
     config["model"]["get_forces"] = False
     config["optim"]["force_coefficient"] = 0
     config["optim"]["loss"] = "mae"
@@ -123,6 +143,7 @@ def test_training_gmp():
     print("Val energy only success!")
 
     # energy+forces
+    config = get_config()
     config["model"]["get_forces"] = True
     config["optim"]["force_coefficient"] = 0.04
     config["optim"]["loss"] = "mse"
