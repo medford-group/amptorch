@@ -1,4 +1,4 @@
-name: amptorch_gpupy38
+name: amptorch_gpupy39
 channels:
   - pytorch
   - nvidia
