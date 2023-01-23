@@ -1,31 +1,31 @@
-name: amptorch_gpu
+name: amptorch_gpupy38
 channels:
   - pytorch
-  - conda-forge
+  - nvidia
   - defaults
 dependencies:
-  - ase=3.21*
-  - matplotlib=3.3*
+  - python=3.9.*
+  - pytorch=1.10.0
+  - matplotlib=3.3.*
   - pip
-  - pre-commit=2.2*
-  - python=3.6.*
-  - pytorch=1.9.0
   - tqdm=4.45.*
   - cudatoolkit=11.1
   - h5py
-  - pykdtree
   - pip:
+    - ase==3.21.*
+    - pre-commit==2.2.*
+    - pykdtree
     - cffi
     - wandb
     - lmdb==1.0.0
-    - skorch==0.10.*
+    - skorch==0.12.*
     - torch-geometric
-    - -f https://data.pyg.org/whl/torch-1.9.0+cu111.html
+    - -f https://data.pyg.org/whl/torch-1.10.0+cu111.html
     - torch-scatter
-    - -f https://data.pyg.org/whl/torch-1.9.0+cu111.html
+    - -f https://data.pyg.org/whl/torch-1.10.0+cu111.html
     - torch-sparse
-    - -f https://data.pyg.org/whl/torch-1.9.0+cu111.html
+    - -f https://data.pyg.org/whl/torch-1.10.0+cu111.html
     - torch-cluster
-    - -f https://data.pyg.org/whl/torch-1.9.0+cu111.html
+    - -f https://data.pyg.org/whl/torch-1.10.0+cu111.html
     - torch-spline-conv
-    - -f https://data.pyg.org/whl/torch-1.9.0+cu111.html
+    - -f https://data.pyg.org/whl/torch-1.10.0+cu111.html
